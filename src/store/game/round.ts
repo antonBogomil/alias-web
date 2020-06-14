@@ -1,108 +1,83 @@
-import Team from "../teams/team";
 import {action, computed, observable} from "mobx";
-import Settings from "./settings";
+import Game from "./index";
 
-type HistoryItem = {
-    word: string,
-    status: boolean
+type RoundHistory = {
+    [key: string]: boolean,
 }
 
 class Round {
     @observable wordIndex: number = 0;
-    @observable score: number;
     @observable timeSec: number = 0;
-    @observable history: HistoryItem[] = [];
-    words: [] = [];
-
-
-    private settings: Settings;
-    private team: Team;
+    @observable history: RoundHistory = {};
+    @observable isPaused: boolean = false;
+    // @observable isForcedFinished: boolean = false;
     private timer;
+    root: Game;
 
-    constructor(words, team: Team, settings) {
-        this.words = words;
-        this.settings = settings;
-        this.score = 0;
-        this.team = team;
-    }
-
-    @computed get finished() {
-        return this.timeSec === this.settings.roundTimeSec
+    constructor(root: Game) {
+        this.root = root;
     }
 
     @computed
-    public get currentWord() {
-        return this.words[this.wordIndex];
-    }
-
-    @action
-    public nextWord() {
-        this.wordIndex++;
+    get finished() {
+        return this.timeSec === this.root.settings.roundTimeSec ||
+            !this.root.words.current
     }
 
     @action
     public start() {
+        this.isPaused = false;
         this.timer = setInterval(() => {
-            this.timeSec++
+            this.timeSec++;
             if (this.finished) {
                 this.finish();
             }
         }, 1000)
     }
 
+    @action
     public stop() {
-        clearInterval(this.timer)
+        clearInterval(this.timer);
+        this.isPaused = true
     }
 
+    @action
     private reset() {
         this.stop();
         this.timeSec = 0;
     }
 
-    private finish() {
-        console.log(this.team);
-        this.team.addScore(this.score);
+    @action
+    public finish() {
+        this.timeSec = this.root.settings.roundTimeSec;
+        this.root.currentTeam.addScore(this.score);
         this.stop();
+        this.root.setNextTeam();
+        this.root.save()
     }
 
     @computed
-    get playAudioClock() {
-        return (this.settings.roundTimeSec - this.timeSec) === 10
-    }
-
-    @action
-    addPoints() {
-        this.score = this.score + this.settings.pointsPlus;
-        this.nextWord();
-        this.pushHistory(this.currentWord, true)
-    }
-
-    @action
-    minusPoints() {
-        this.score = this.score - this.settings.pointsMinus;
-        this.nextWord();
-        this.pushHistory(this.currentWord, false)
-    }
-
-    @action
-    private pushHistory(name, value) {
-        this.history.push({
-            word: name,
-            status: value
-        })
-    }
-
-    @action
-    changeHistory(word) {
-        const itemIndex = this.history.findIndex((item) => (item.word === word));
-        this.history[itemIndex] = {
-            word,
-            status: !this.history[itemIndex].status
-        };
-        this.score = this.history.reduce((sum, currentValue) => {
-            if (currentValue.status) return sum + this.settings.pointsPlus;
-            return sum - this.settings.pointsMinus
+    get score() {
+        const values = Object.values(this.history);
+        return values.reduce((sum, status) => {
+            return sum + +(status ? this.root.settings.pointsPlus : -this.root.settings.pointsMinus)
         }, 0)
+    }
+
+    @action
+    next(status: boolean) {
+        this.pushHistory(this.root.words.current, status);
+        this.root.words.next()
+    }
+
+    @action
+    private pushHistory(key: string, status: boolean) {
+        this.history[key] = status
+    }
+
+    @action
+    changeHistory(word: string) {
+        this.history[word] = !this.history[word];
     }
 }
 

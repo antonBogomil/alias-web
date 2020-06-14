@@ -1,8 +1,8 @@
-import translations from "../config/translations";
+import dictionary from "../config/dictionary";
 
 const defaultLang = 'ua';
 const useTranslations = (lang = defaultLang) => {
     //TODO : hook
-    return translations.ua
+    return dictionary.ua
 };
 export default useTranslations

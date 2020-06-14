@@ -1,99 +1,105 @@
-import React, {useState} from 'react';
-import {Fab, makeStyles} from "@material-ui/core";
+import React from 'react';
+import {Button, Container, Fab, Grid, makeStyles} from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add"
-import arrayMove from 'array-move';
-import {AddModal, DeleteModal} from "./components/Modal";
+import {AddModal} from "./components/Modal";
 import {TeamsList} from "./components/List";
 import {inject, observer} from "mobx-react";
 import Footer from '../../components/Footer';
-import {inspect} from "util";
 import useTranslations from "../../services/translations";
+import Store from "../../store";
+import {shouldCancelStart} from './utils';
+import DeleteIcon from '@material-ui/icons/Delete';
 
-function shouldCancelStart(e) {
-    if (['button', 'svg', 'span', 'path'].indexOf(e.target.tagName.toLowerCase()) !== -1) {
-        return true;
-    }
-}
-
-const useStyles = makeStyles({
-    center: {
-        textAlign: 'center'
+const useStyles = makeStyles((theme) => {
+    return {
+        center: {
+            textAlign: 'center'
+        },
+        resetBtn: {
+            // background: theme.palette.error.light
+        }
     }
 });
 
-const TeamsPage = ({store,history}) => {
+interface IProps {
+    store: Store
+    history: History
+}
+
+const TeamsPage = (props: IProps) => {
+    const {store: {root: {teams}}, history} = props
     const cl = useStyles();
     const t = useTranslations();
-    const [teamToDelete, setTeamToDelete] = useState({
-        id: null,
-        name: null
-    });
-    const [isOpenAdd, setOpenAdd] = useState(false);
-    const list = store.list;
+    const list = teams.list;
+
     const navigation = {
-        // back: '/',
-        next: store.list.length ? '/ready': null
+        next: teams.list.length > 1 ? '/ready' : null
     }
+
+    function handleDeleteTeam(id: number) {
+        teams.delete(id)
+    }
+
+    function handleAddTeam(teamName: string) {
+        teams.add(teamName)
+    }
+
+    function handleReset() {
+        teams.reset()
+    }
+
+
     return (
         <div className='wrapper'>
-            <h1>{t.TEAMS}</h1>
+            <Grid
+                container
+                justify='space-between'
+                alignItems='center'
+            >
+                <h1>{t.TEAMS}</h1>
+                <Button
+					startIcon={<DeleteIcon />}
+                    color='secondary'
+					variant="outlined"
+                    className={cl.resetBtn}
+                    onClick={handleReset}
+                >
+                    {t.RESET}
+                </Button>
+            </Grid>
             <TeamsList
                 items={list}
                 pressDelay={60}
                 lockAxis='y'
-                height={300}
                 lockToContainerEdges={true}
                 axis='y'
                 shouldCancelStart={shouldCancelStart}
-                handleDelete={(item) => {
-                    setTeamToDelete(item)
-                }}
-            />
-            <DeleteModal
-                open={!!teamToDelete.id}
-                handleClose={() => {
-                    setTeamToDelete({
-                        id: null,
-                        name: null
-                    })
-                }}
-                handleDelete={() => {
-                    store.delete(teamToDelete.id)
-                    setTeamToDelete({
-                        id: null,
-                        name: null
-                    })
-                }}
-                message={teamToDelete.name}
+                handleDelete={handleDeleteTeam}
             />
             <AddModal
-                handleClose={() => {
-                    setOpenAdd(false)
-                }}
-                open={isOpenAdd}
-                handleAdd={(data) => {
-                    setOpenAdd(false);
-                    store.add(data)
-                }}
-                message={""}
+                handleClose={() => teams.openAdd(false)}
+                open={teams.addModalOpen}
+                handleAdd={handleAddTeam}
+                validate={teams.validate}
             />
             <div className={cl.center}>
-                <Fab color="primary" onClick={() => {
-                    setOpenAdd(true)
-                }} aria-label="add">
-                    <AddIcon/>
-                </Fab>
+                {
+                    teams.canAdd &&
+                    <Fab
+                        color="primary"
+                        onClick={() => teams.openAdd(true)}
+                        aria-label="add"
+                    >
+                        <AddIcon/>
+                    </Fab>
+                }
             </div>
-            <Footer history={history} navigation={navigation} />
+            <Footer history={history} navigation={navigation}/>
         </div>
     );
 };
-const navigation = {
-    next: '/ready',
-    prev: null
-};
-export default observer(inject(({store}) => {
+export default inject(({store}) => {
     return {
-        store: store.game.teams
+        store: store
     };
-})(TeamsPage));
+})(observer((TeamsPage)));

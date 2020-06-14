@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import audios from "../config/audios";
+import {useEffect} from 'react';
+
 const Music = (props) => {
     useEffect(() => {
         // new Audio(audios.clock).play()

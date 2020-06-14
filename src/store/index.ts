@@ -1,6 +1,11 @@
-import TeamsPage from "./teams";
 import Game from "./game";
-const store = {
-    game: new Game()
-};
-export default store;
+export interface IStore {
+	root: Game,
+}
+export default class Store implements IStore {
+  root: Game;
+
+  constructor() {
+	this.root = new Game()
+  }
+}

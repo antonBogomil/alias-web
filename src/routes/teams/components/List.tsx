@@ -2,47 +2,40 @@ import {Avatar, Fab, List, ListItem, ListItemAvatar, ListItemText, makeStyles} f
 import {SortableContainer, SortableElement} from "react-sortable-hoc";
 import React from "react";
 import DeleteIcon from "@material-ui/icons/Delete";
-import {deepOrange} from "@material-ui/core/colors";
+import TeamAvatar from "../../../components/Avatar";
 
-const useStyles = makeStyles(theme => ({
-    square: {
-        color: theme.palette.getContrastText(deepOrange[500]),
-        backgroundColor: deepOrange[500],
-        marginRight: theme.spacing(2)
-    }
-}));
 const TeamItem = SortableElement(({item, handleDelete}) => {
-    const cl = useStyles();
-    return (
-        <ListItem>
-            <Avatar variant="rounded" className={cl.square}>
-                CT
-            </Avatar>
-            <ListItemText>{item.name}</ListItemText>
-            <div>
-                <Fab onClick={() => {
-                    handleDelete(item);
-                }} aria-label="delete">
+	return (
+		<ListItem>
+			<TeamAvatar
+				color={item.color}
+				name={item.name}
+			/>
+			<ListItemText>{item.name}</ListItemText>
+			<div>
+				<Fab onClick={() => {
+					handleDelete(item.id);
+				}} aria-label="delete">
 
-                    <DeleteIcon fontSize='small'/>
-                </Fab>
-            </div>
-        </ListItem>
-    )
+					<DeleteIcon fontSize='small'/>
+				</Fab>
+			</div>
+		</ListItem>
+	)
 });
 export const TeamsList = SortableContainer(({items, handleDelete}) => {
-    return (
-        <List>
-            {
-                items.map((item: any, i: number) => (
-                    <TeamItem
-                        index={i}
-                        key={i}
-                        item={item}
-                        handleDelete={handleDelete}
-                    />
-                ))
-            }
-        </List>
-    )
+	return (
+		<List>
+			{
+				items.map((item: any, i: number) => (
+					<TeamItem
+						index={i}
+						key={i}
+						item={item}
+						handleDelete={handleDelete}
+					/>
+				))
+			}
+		</List>
+	)
 });

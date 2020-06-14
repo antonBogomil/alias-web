@@ -1,37 +1,69 @@
 import Settings from "./settings";
-import dictionary from "../../config/dictionary";
+// import {dictionary} from "../../data";
 import Teams from "../teams";
 import Round from "./round";
 import {action, computed, observable} from "mobx";
+import LocalStorageService from '../../services/localStorage'
+import Words from "../words";
+import wordsData from '../../data/words.json'
+
+const localStore = new LocalStorageService('gameStore');
 
 class Game {
-    private settings = new Settings();
-    private teams = new Teams();
-    private dictionary = dictionary;
-    private teamIndex = 0;
-    public isStarted = false;
+    public settings = new Settings();
+    public teams: Teams;
+    public words: Words;
+
+    public teamIndex = 0;
     @observable private wordIndex = 0;
     @observable public round!: Round;
 
-    private getWords() {
-        return dictionary.slice(this.wordIndex)
-    }
+    constructor() {
+        const initialStore = localStore.get();
+        this.words = new Words(wordsData);
+        this.teams = new Teams(this, initialStore.teams);
+        this.teamIndex = initialStore.teamIndex || 0;
 
-    start() {
-        this.isStarted = true
-    }
-    stop(){
-        this.isStarted = false
     }
 
     @computed get currentTeam() {
         return this.teams.getByIndex(this.teamIndex)
     }
 
+    @action
+    setNextTeam() {
+        if (this.teamIndex === this.teams.list.length - 1) {
+            this.teamIndex = 0
+        } else {
+            this.teamIndex++
+        }
+    }
+
     @action createRound() {
-        const words = this.getWords();
-        const team = this.teams.getByIndex(this.teamIndex);
-        this.round = new Round(words, team, this.settings);
+        this.round = new Round(this);
+    }
+
+    @action
+    skipRound() {
+        this.setNextTeam();
+    }
+
+    save() {
+        const toSaveData = mapToSave(this)
+        localStore.set(toSaveData)
+    }
+
+    @action
+    restart() {
+        this.teamIndex = 0;
+        this.teams.reset()
+    }
+}
+
+function mapToSave(store: Game) {
+    return {
+        teams: store.teams.toSave(),
+        teamIndex: store.teamIndex
     }
 }
 

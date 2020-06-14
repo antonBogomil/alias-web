@@ -6,9 +6,9 @@ const theme = createMuiTheme(
             "common": {"black": "#000", "white": "#fff"},
             "background": {"paper": "#fff", "default": "#fafafa"},
             "primary": {
-                "light": "rgba(192, 103, 239, 1)",
-                "main": "rgba(177, 66, 236, 1)",
-                "dark": "rgba(123, 46, 165, 1)",
+                "light": "#4aedc4",
+                "main": "#1de9b6",
+                "dark": "#14a37f",
                 "contrastText": "#fff"
             },
             "secondary": {

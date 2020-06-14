@@ -1,21 +1,28 @@
 import {observable} from "mobx";
-import {colors} from "../../data";
 
-class Team {
-    public readonly id: number;
-    public color: string;
-    @observable name: string;
-    private score: number;
+export interface ITeam {
+  name: string
+  id: number
+  color: string,
+  score: number
+}
 
-    constructor(id, name) {
-        this.name = name;
-        this.id = id;
-        this.score = 0;
-        this.color = colors[id]
-    }
-    public addScore(n) {
-        this.score += n;
-    }
+class Team implements ITeam{
+  @observable name: string;
+  public readonly id: number;
+  public color: string;
+  public score: number;
+
+  constructor(id, name, color, score = 0) {
+	this.name = name;
+	this.id = id;
+	this.score = score;
+	this.color = color;
+  }
+
+  public addScore(n) {
+	this.score += n;
+  }
 }
 
 export default Team
